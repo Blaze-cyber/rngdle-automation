@@ -7,7 +7,25 @@
   "assets": { "binding": "ASSETS", "directory": "./dist" },
   "workers_dev": true,
   "preview_urls": false,
-  "observability": { "enabled": true },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "redact_query_string": false,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "invocation_logs": true,
+      "persist": true
+    },
+    "traces": {
+      "enabled": false,
+      "head_sampling_rate": 1,
+      "persist": true
+    },
+    "issue_detection": {
+      "enabled": true
+    }
+  },
   "vars": {
     "CONTROL_PUBLIC_URL": "rngdle-automation.blaiser509-d39.workers.dev",
     "CONTROL_SESSION_DAYS": "7",
