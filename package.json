@@ -16,7 +16,8 @@
     "cloudflare": "node scripts/cloudflare.mjs",
     "cloudflare:init": "node scripts/cloudflare.mjs init",
     "build:workers": "node scripts/prepare-workers-build.mjs && CLOUDFLARE_WRANGLER_CONFIG=wrangler.workers-build.jsonc pnpm run build",
-    "deploy:workers": "pnpm run build:workers && pnpm run deploy"
+    "deploy:workers": "pnpm run build:workers && pnpm run deploy",
+    "bots": "node scripts/bots.mjs"
   },
   "engines": {
     "node": ">=22.12.0"
