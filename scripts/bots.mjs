@@ -52,7 +52,7 @@ if (command === "create") {
   console.log(JSON.stringify(profiles, null, 2));
 } else if (command === "validate") {
   const [slug] = args;
-  if (!slug) throw new Error("Usage: pnpm bots validate <slug>");
+  if (!slug || !/^[a-z0-9](?:[a-z0-9-]{0,30}[a-z0-9])?$/.test(slug)) throw new Error("Usage: pnpm bots validate <safe-slug>");
   const profile = JSON.parse(await fs.readFile(profilePath(slug), "utf8"));
   const config = createBotWorkerConfig(await readBase(), profile);
   console.log(JSON.stringify({ valid: true, worker: config.name, durableObjectBinding: "AUTOMATION", deployed: false }, null, 2));
