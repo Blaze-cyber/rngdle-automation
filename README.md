@@ -94,3 +94,32 @@ Cloudflare Workers Builds 的构建命令设为 `pnpm run build:workers`，部�
 生产 `CONTROL_PUBLIC_URL` 固定为 Wrangler 配置中的 HTTPS 地址，备份中的 URL 不会覆盖它。Control 密码由 `CONTROL_PASSWORD` Secret 管理，可在 Cloudflare 控制台修改，或运行 `mise run wrangler secret put CONTROL_PASSWORD`。Durable Object 只保存会话和登录限流记录，修改密码后旧会话失效。Cookie 始终启用 Secure；运行配置从 Worker 绑定读取，本地通过 `.dev.vars` 提供。
 
 技术依据：[Astro Cloudflare 适配器](https://docs.astro.build/en/guides/integrations-guide/cloudflare/)、[Durable Object Alarms](https://developers.cloudflare.com/durable-objects/api/alarms/)、[Workers TCP sockets](https://developers.cloudflare.com/workers/runtime-apis/tcp-sockets/)。
+
+
+## Multiple independent bots (preview)
+
+Additional bots are managed as separate Worker profiles. Each profile gets a distinct Worker name and its own Durable Object namespace, Worker secrets, control URL, migration token, and backup target. The original `rngdle-automation` Worker configuration is not rewritten.
+
+Create a profile locally (the files are written under ignored `data/bots/` with private file permissions):
+
+```bash
+pnpm bots create <slug> <unique-worker-name> <https-control-origin> <rngdle-account-email>
+pnpm bots list
+pnpm bots validate <slug>
+```
+
+Example placeholders (replace them with values you choose):
+
+```bash
+pnpm bots create bot-two rngdle-automation-two https://rngdle-automation-two.your-subdomain.workers.dev second-account@example.com
+```
+
+The profile generator intentionally does not deploy anything and does not copy credentials. Configure the profile's own Worker secrets separately, using its generated Wrangler config at `data/bots/<slug>/wrangler.jsonc`. Required secrets are `RNGDLE_EMAIL`, `SMTP_USER`, `SMTP_PASSWORD` (or the SMTP OAuth secrets), `MAIL_TO`, `CONTROL_PASSWORD`, and `MIGRATION_TOKEN`. Set any additional secrets required by the features you enable. Do not run the primary bot's `cloudflare secrets` command against another profile.
+
+This initial profile manager only creates and validates local configuration. It deliberately has no deploy or delete-Cloudflare-resource command yet; deployment and lifecycle automation remain gated until profile-specific backup, pause, secret setup, and rollback workflows are tested.
+
+### Undo / rollback
+
+- Before deployment: remove only the selected profile directory under `data/bots/<slug>`; the original Worker is unaffected.
+- After a second Worker is deployed: pause that Worker using its own migration origin/token, preserve its backup, and remove only that Worker after verifying its exact name. Never delete the primary Worker or its Durable Object namespace.
+- Reverting or closing the code change does not automatically delete Cloudflare resources or restore stored data. Keep a backup before any future restore or deletion operation.

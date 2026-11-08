@@ -69,3 +69,9 @@ description = "Run Wrangler with the project toolchain"
 depends = ["install"]
 run = "pnpm exec wrangler"
 raw = true
+
+[tasks.bots]
+description = "Create, list, and validate isolated bot profiles"
+depends = ["install"]
+run = "pnpm run bots"
+raw = true
