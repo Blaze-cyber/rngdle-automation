@@ -26,8 +26,8 @@
       "enabled": true
     }
   },
-  "vars": {
-    "CONTROL_PUBLIC_URL": "rngdle-automation.blaiser509-d39.workers.dev",
+   "vars": {
+    "CONTROL_PUBLIC_URL": "https://rngdle-automation.blaiser509-d39.workers.dev/login",
     "CONTROL_SESSION_DAYS": "7",
     "EMAIL_RETRY_MINUTES": "1",
     "LLM_ENDPOINT": "https://api.deepseek.com",
