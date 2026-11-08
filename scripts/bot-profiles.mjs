@@ -3,7 +3,7 @@ import { splitWorkerBindings } from "../src/cloud/config.js";
 const SLUG = /^[a-z0-9](?:[a-z0-9-]{0,30}[a-z0-9])?$/;
 const WORKER = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
 
-export function validateBotProfile(profile, primaryWorkerName) {
+export function validateBotProfile(profile, primaryWorkerName, primaryControlUrl) {
   if (!profile || typeof profile !== "object") throw new Error("Bot profile must be an object");
   if (!SLUG.test(profile.slug ?? "")) throw new Error("Bot profile slug must use lowercase letters, numbers, and hyphens");
   if (!WORKER.test(profile.workerName ?? "")) throw new Error("Worker name must use lowercase letters, numbers, and hyphens");
@@ -16,18 +16,17 @@ export function validateBotProfile(profile, primaryWorkerName) {
   if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash || url.pathname !== "/") {
     throw new Error("Control URL must be an HTTPS origin without credentials, path, query, or fragment");
   }
-  if (url.hostname === "rngdle-automation.blaiser509-d39.workers.dev") {
+  if (primaryControlUrl && url.hostname === new URL(primaryControlUrl).hostname) {
     throw new Error("A bot profile cannot use the existing primary Worker URL");
   }
   return profile;
 }
 
 export function createBotWorkerConfig(source, profile) {
-  validateBotProfile(profile, source.name);
+  validateBotProfile(profile, source.name, source.vars?.CONTROL_PUBLIC_URL);
   const config = structuredClone(source);
   config.name = profile.workerName;
-  config.vars = { ...config.vars, CONTROL_PUBLIC_URL: profile.controlUrl, RNGDLE_EMAIL: undefined };
-  delete config.vars.RNGDLE_EMAIL;
+  config.vars = { ...config.vars, CONTROL_PUBLIC_URL: profile.controlUrl };
   const bindings = config.durable_objects?.bindings ?? [];
   if (!bindings.some((binding) => binding.name === "AUTOMATION" && binding.class_name === "Automation")) {
     throw new Error("Base Wrangler config is missing the Automation Durable Object binding");
