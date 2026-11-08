@@ -1,0 +1,17 @@
+# Local workerd configuration. Other defaults are in wrangler.jsonc.
+# Use Worker secrets for email addresses, credentials and MIGRATION_TOKEN.
+RNGDLE_EMAIL=player@example.com
+SMTP_HOST=smtp.example.com
+SMTP_USER=sender@example.com
+SMTP_PASSWORD=replace-with-smtp-password
+MAIL_TO=receiver@example.com
+CONTROL_PASSWORD=replace-with-control-password
+MIGRATION_TOKEN=replace-with-a-random-32-byte-hex-string
+CONTROL_PUBLIC_URL=http://localhost:4321
+
+# Optional features; their other parameters already have defaults.
+# POEM_ENABLED=true
+# LLM_API_KEY=replace-with-llm-api-key
+# RETURN_LIKES_ENABLED=true
+
+# MAIL_FROM defaults to SMTP_USER. OAuth settings are documented in README.md.

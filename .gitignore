@@ -1,0 +1,17 @@
+node_modules/
+data/
+.env
+.env.*
+config/config.yaml
+test-results/
+npm-debug.log*
+.astro/
+.wrangler/
+dist/
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+playwright-report/
+backups/
+wrangler.production.jsonc
+wrangler.workers-build.jsonc

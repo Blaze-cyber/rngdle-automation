@@ -1,0 +1,7 @@
+---
+import ControlLayout from '../layouts/ControlLayout.astro';
+import Overview from '../components/Overview.astro';
+import { controlApi } from '../control-api.js';
+const overview = await controlApi(Astro.request, '/api/overview');
+---
+<ControlLayout overview={overview}><Overview overview={overview} /></ControlLayout>

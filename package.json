@@ -1,0 +1,75 @@
+{
+  "name": "rngdle-automation",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.15.0",
+  "description": "Astro control dashboard and durable RNGdle automation on Cloudflare Workers.",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "dev": "CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV=false astro dev",
+    "build": "CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV=false astro build",
+    "preview": "CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV=false astro preview",
+    "deploy": "pnpm exec wrangler deploy --config dist/server/wrangler.json",
+    "deploy:production": "node scripts/deploy-production.mjs",
+    "test:e2e": "playwright test",
+    "cloudflare": "node scripts/cloudflare.mjs",
+    "cloudflare:init": "node scripts/cloudflare.mjs init",
+    "build:workers": "node scripts/prepare-workers-build.mjs && CLOUDFLARE_WRANGLER_CONFIG=wrangler.workers-build.jsonc pnpm run build",
+    "deploy:workers": "pnpm run build:workers && pnpm run deploy"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "^14.4.2",
+    "@fontsource-variable/inter": "5.3.0",
+    "@fontsource/space-mono": "5.3.0",
+    "acorn": "^8.19.0",
+    "astro": "^7.4.2",
+    "nodemailer": "10.2.1",
+    "openai": "^7.43.0",
+    "perfect-scrollbar": "1.5.6"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "wrangler": "^4.152.0"
+  },
+  "cloudflare": {
+    "bindings": {
+      "RNGDLE_EMAIL": {
+        "description": "RNGdle account email. Store as a Worker secret."
+      },
+      "SMTP_HOST": {
+        "description": "SMTP server hostname. Set as a Workers Builds variable."
+      },
+      "SMTP_USER": {
+        "description": "SMTP login account. Store as a Worker secret."
+      },
+      "SMTP_PASSWORD": {
+        "description": "SMTP credential for password authentication. Store as a Worker secret."
+      },
+      "MAIL_TO": {
+        "description": "Comma-separated result email recipients. Store as a Worker secret."
+      },
+      "MIGRATION_TOKEN": {
+        "description": "Random management token used by the `pnpm cloudflare` commands. Generate it with `openssl rand -hex 32`."
+      },
+      "CONTROL_PUBLIC_URL": {
+        "description": "Public HTTPS URL for the Control page. For a custom deployment, set this as a Workers Builds variable."
+      },
+      "CONTROL_PASSWORD": {
+        "description": "Control sign-in password (8–512 characters). Store as a Worker secret. Updating it invalidates existing sessions."
+      },
+      "WORKER_NAME": {
+        "description": "Optional Workers Builds variable used to override the Worker name without editing the repository."
+      },
+      "CUSTOM_DOMAIN": {
+        "description": "Optional Workers Builds variable hostname. When set, the generated configuration uses this custom domain route."
+      },
+      "ZONE_NAME": {
+        "description": "Cloudflare zone name, required when `CUSTOM_DOMAIN` is set."
+      }
+    }
+  }
+}
