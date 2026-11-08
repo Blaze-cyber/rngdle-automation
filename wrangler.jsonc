@@ -43,9 +43,9 @@
     "RETURN_LIKES_MAX_PER_DAY": "10",
     "RETURN_LIKES_POLL_MINUTES": "60",
     "SMTP_AUTH_MODE": "password",
-    "SMTP_PORT": "587",
+    "SMTP_PORT": "465",
     "SMTP_REQUIRE_TLS": "true",
-    "SMTP_SECURE": "false"
+    "SMTP_SECURE": "true"
   },
   "durable_objects": {
     "bindings": [{ "name": "AUTOMATION", "class_name": "Automation" }]
