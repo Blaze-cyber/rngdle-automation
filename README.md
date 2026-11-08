@@ -111,7 +111,7 @@ pnpm bots validate <slug>
 Example placeholders (replace them with values you choose):
 
 ```bash
-pnpm bots create bot-two rngdle-automation-two https://rngdle-automation-two.<your-subdomain>.workers.dev second-account@example.com
+pnpm bots create bot-two rngdle-automation-two https://rngdle-automation-two.your-subdomain.workers.dev second-account@example.com
 ```
 
 The profile generator intentionally does not deploy anything and does not copy credentials. Configure the profile's own Worker secrets separately, using its generated Wrangler config at `data/bots/<slug>/wrangler.jsonc`. Required secrets are `RNGDLE_EMAIL`, `SMTP_USER`, `SMTP_PASSWORD` (or the SMTP OAuth secrets), `MAIL_TO`, `CONTROL_PASSWORD`, and `MIGRATION_TOKEN`. Set any additional secrets required by the features you enable. Do not run the primary bot's `cloudflare secrets` command against another profile.
