@@ -8,7 +8,6 @@
   "workers_dev": true,
   "preview_urls": false,
   "observability": { "enabled": true },
-  "limits": { "cpu_ms": 30000 },
   "vars": {
     "CONTROL_PUBLIC_URL": "https://rngdle-automation.blaiser509-d39.workers.dev",
     "RETRY_MINUTES": "30",
