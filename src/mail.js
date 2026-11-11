@@ -79,7 +79,18 @@ function fromAddress(config) {
   return { name: config.mail.fromName ?? "RNGdle Today", address: config.smtp.from };
 }
 
-function emailShell({ preheader, headerMeta, content }) {
+function botAttribution(config) {
+  const consoleUrl = new URL(config.control.publicUrl);
+  const workerName = consoleUrl.hostname.split(".")[0];
+  const botName = workerName.startsWith("rngdle-automation-")
+    ? `bot-${workerName.slice("rngdle-automation-".length)}`
+    : workerName;
+  const currentPath = consoleUrl.pathname.replace(/\/+$/, "");
+  if (!currentPath.endsWith("/login")) consoleUrl.pathname = `${currentPath}/login`;
+  return { botName, consoleUrl: consoleUrl.toString() };
+}
+
+function emailShell({ preheader, headerMeta, content, botName, consoleUrl }) {
   return `<!doctype html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light only"><title>RNGdle</title></head>
@@ -95,7 +106,8 @@ function emailShell({ preheader, headerMeta, content }) {
           </tr></table>
         </td></tr>
         <tr><td style="padding:36px 0 42px;">${content}</td></tr>
-        <tr><td align="center" style="padding:17px 0 26px;border-top:1px solid #e5e7eb;font-family:${EMAIL_FONT};font-size:10px;line-height:16px;color:#9ca3af;letter-spacing:.04em;">AUTOMATED DAILY ROLL</td></tr>
+        <tr><td align="center" style="padding:17px 12px 7px;border-top:1px solid #e5e7eb;font-family:${EMAIL_FONT};font-size:11px;line-height:18px;color:#6b7280;">Sent by <strong style="color:#111827;">${escapeHtml(botName)}</strong> · <a href="${escapeHtml(consoleUrl)}" style="color:#374151;font-weight:700;text-decoration:underline;">OPEN BOT CONSOLE</a></td></tr>
+        <tr><td align="center" style="padding:0 0 26px;font-family:${EMAIL_FONT};font-size:10px;line-height:16px;color:#9ca3af;letter-spacing:.04em;">AUTOMATED DAILY ROLL</td></tr>
       </table>
     </td></tr>
   </table>
@@ -140,6 +152,7 @@ export function buildRollMessage(config, date, result) {
   const rollRarity = result.rarity && result.rarity !== "unknown" ? result.rarity : cardRarity(result.earnedEp);
   const rollPalette = rarityPalette(rollRarity);
   const safeBaseUrl = escapeHtml(config.rngdle.baseUrl);
+  const { botName, consoleUrl } = botAttribution(config);
   const content = `
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
       <tr><td align="center">
@@ -178,17 +191,23 @@ export function buildRollMessage(config, date, result) {
         : ["- No badges"]),
       "",
       config.rngdle.baseUrl,
+      "",
+      `Sent by: ${botName}`,
+      `Bot console: ${consoleUrl}`,
     ].join("\n"),
     html: emailShell({
       preheader: `${result.number} - ${earned} EP - ${result.badges.length} badges`,
       headerMeta: date,
       content,
+      botName,
+      consoleUrl,
     }),
   };
 }
 
 export function buildAuthenticationRequiredMessage(config) {
-  const safeControlUrl = escapeHtml(config.control.publicUrl);
+  const { botName, consoleUrl } = botAttribution(config);
+  const safeControlUrl = escapeHtml(consoleUrl);
   const content = `
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
       <tr><td align="center"><div style="display:inline-block;min-width:210px;padding:19px 22px;border:3px solid #dc2626;border-radius:11px;background:#fff1f2;font-family:${EMAIL_FONT};font-size:25px;line-height:32px;font-weight:800;color:#991b1b;text-align:center;text-transform:uppercase;">LOGIN REQUIRED</div></td></tr>
@@ -202,8 +221,8 @@ export function buildAuthenticationRequiredMessage(config) {
     from: fromAddress(config),
     to: config.smtp.to,
     subject: `${config.mail.subjectPrefix} Login required`,
-    text: `The saved RNGdle login has expired. Open ${config.control.publicUrl} and complete the email magic-link login. The pending daily run will continue automatically.`,
-    html: emailShell({ preheader: "RNGdle authentication is required", headerMeta: "Control", content }),
+    text: `The saved RNGdle login has expired. Open ${consoleUrl} and complete the email magic-link login. The pending daily run will continue automatically.\n\nSent by: ${botName}\nBot console: ${consoleUrl}`,
+    html: emailShell({ preheader: "RNGdle authentication is required", headerMeta: "Control", content, botName, consoleUrl }),
   };
 }
 
