@@ -4,7 +4,7 @@ import { buildAuthenticationRequiredMessage, buildRollMessage } from "../src/mai
 
 const config = {
   rngdle: { baseUrl: "https://www.rngdle.com" },
-  control: { publicUrl: "http://localhost:3000" },
+  control: { publicUrl: "https://rngdle-automation-seven.example.workers.dev" },
   mail: { fromName: "RNGdle Today", subjectPrefix: "[RNGdle]" },
   smtp: { from: "sender@example.com", to: ["receiver@example.com"] },
 };
@@ -29,6 +29,10 @@ test("buildRollMessage renders the RNGdle result hierarchy", () => {
   assert.match(message.html, /MYTHIC/i);
   assert.match(message.html, /COMMON/i);
   assert.match(message.html, /1 BADGE EARNED/);
+  assert.match(message.text, /Sent by: bot-seven/);
+  assert.match(message.text, /Bot console: https:\/\/rngdle-automation-seven\.example\.workers\.dev\/login/);
+  assert.match(message.html, /Sent by <strong[^>]*>bot-seven<\/strong>/);
+  assert.match(message.html, /href="https:\/\/rngdle-automation-seven\.example\.workers\.dev\/login"/);
 });
 
 test("mail templates escape untrusted display values", () => {
@@ -49,6 +53,10 @@ test("mail templates escape untrusted display values", () => {
   assert.match(authentication.html, /&lt;script&gt;/);
   assert.deepEqual(authentication.from, { name: "RNGdle Today", address: "sender@example.com" });
   assert.equal(authentication.subject, "[RNGdle] Login required");
+  assert.match(authentication.text, /Sent by: bot-seven/);
+  assert.match(authentication.text, /Bot console: https:\/\/rngdle-automation-seven\.example\.workers\.dev\/login/);
+  assert.match(authentication.html, /Sent by <strong[^>]*>bot-seven<\/strong>/);
+  assert.match(authentication.html, /href="https:\/\/rngdle-automation-seven\.example\.workers\.dev\/login"/);
 });
 
 test("saved poems appear in both mail formats with escaped HTML", () => {
