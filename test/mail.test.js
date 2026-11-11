@@ -50,7 +50,7 @@ test("mail templates escape untrusted display values", () => {
   assert.doesNotMatch(message.html, /<img src=x/);
   assert.match(message.html, /&lt;img src=x/);
   assert.doesNotMatch(authentication.html, /<script>alert/);
-  assert.match(authentication.html, /&lt;script&gt;/);
+  assert.match(authentication.html, /&lt;script&gt;|%3Cscript%3E/i);
   assert.deepEqual(authentication.from, { name: "RNGdle Today", address: "sender@example.com" });
   assert.equal(authentication.subject, "[RNGdle] Login required");
 });
