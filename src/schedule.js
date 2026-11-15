@@ -3,7 +3,9 @@ export function utcDate(now) {
 }
 
 export function workflowRetryAt(dayState) {
-  return dayState?.status === "poem_pending"
+  return dayState?.status === "history_pending"
+    ? dayState.nextHistoryRetryAt ?? dayState.nextRetryAt
+    : dayState?.status === "poem_pending"
     ? dayState.nextPoemRetryAt ?? dayState.nextRetryAt
     : dayState?.status === "email_pending"
     ? dayState.nextEmailRetryAt ?? dayState.nextRetryAt
