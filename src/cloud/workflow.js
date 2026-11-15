@@ -10,20 +10,21 @@ function pruneState(state, keep = 45) {
 }
 
 export async function advanceWorkflow(config, state, date, dependencies = {}) {
-  const { getRoll = getDailyRoll, composePoem = composeDailyPoem, sendRoll = sendRollEmail,
+  const { getRoll = getDailyRoll, recordRoll = async () => {}, composePoem = composeDailyPoem, sendRoll = sendRollEmail,
     sendAuthentication = sendAuthenticationRequiredEmail, now = () => new Date() } = dependencies;
   const current = state.days[date] ??= { status: "pending", attempts: 0, emailAttempts: 0 };
   if (current.status === "success" || current.status === "auth_required") return;
   const store = config.storage.adapter;
   const persist = () => store.put("state", state);
   const clearRetry = () => {
-    for (const field of ["nextRetryAt", "nextRngdleRetryAt", "nextPoemRetryAt", "nextEmailRetryAt"]) current[field] = null;
+    for (const field of ["nextRetryAt", "nextRngdleRetryAt", "nextHistoryRetryAt", "nextPoemRetryAt", "nextEmailRetryAt"]) current[field] = null;
   };
   const stage = !current.result ? "rngdle"
+    : !current.historyRecordedAt ? "history"
     : config.poem.enabled && !current.result.poem ? "poem" : "email";
-  const retryMinutes = stage === "rngdle" ? config.schedule.retryMinutes
+  const retryMinutes = stage === "rngdle" || stage === "history" ? config.schedule.retryMinutes
     : stage === "poem" ? config.poem.retryMinutes : config.schedule.emailRetryMinutes;
-  const retryField = stage === "rngdle" ? "nextRngdleRetryAt" : stage === "poem" ? "nextPoemRetryAt" : "nextEmailRetryAt";
+  const retryField = stage === "rngdle" ? "nextRngdleRetryAt" : stage === "history" ? "nextHistoryRetryAt" : stage === "poem" ? "nextPoemRetryAt" : "nextEmailRetryAt";
   const status = stage === "rngdle" ? "running" : `${stage}_pending`;
   current.status = status;
   current.lastAttemptAt = now().toISOString();
@@ -32,7 +33,7 @@ export async function advanceWorkflow(config, state, date, dependencies = {}) {
   current.nextRetryAt = current[retryField] = nextRetryAt(now(), retryMinutes);
   const attemptField = stage === "rngdle" ? "attempts" : `${stage}Attempts`;
   current[attemptField] = (current[attemptField] ?? 0) + 1;
-  current[stage === "rngdle" ? "lastRngdleAttemptAt" : stage === "poem" ? "lastPoemAttemptAt" : "lastEmailAttemptAt"] = now().toISOString();
+  current[stage === "rngdle" ? "lastRngdleAttemptAt" : stage === "history" ? "lastHistoryAttemptAt" : stage === "poem" ? "lastPoemAttemptAt" : "lastEmailAttemptAt"] = now().toISOString();
   pruneState(state);
   // Save the recovery deadline before issuing any external side effect.
   await persist();
@@ -41,6 +42,10 @@ export async function advanceWorkflow(config, state, date, dependencies = {}) {
     if (stage === "rngdle") {
       current.result = await getRoll(config);
       current.rolledAt = now().toISOString();
+      current.status = "history_pending";
+    } else if (stage === "history") {
+      await recordRoll(config, date, current.result, current.rolledAt);
+      current.historyRecordedAt = now().toISOString();
       current.status = config.poem.enabled && !current.result.poem ? "poem_pending" : "email_pending";
     } else if (stage === "poem") {
       const poem = await composePoem(config, current.result, {
@@ -53,7 +58,10 @@ export async function advanceWorkflow(config, state, date, dependencies = {}) {
       delete current.poemDraft;
       current.status = "email_pending";
     } else {
-      if (!current.emailSentAt) {
+      if (current.result.rarity !== "mythic") {
+        current.emailSkippedAt ??= now().toISOString();
+        current.emailSkipReason = "non_mythic";
+      } else if (!current.emailSentAt) {
         const info = await sendRoll(config, date, current.result);
         current.emailSentAt = now().toISOString();
         current.emailMessageId = info?.messageId ?? null;
