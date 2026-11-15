@@ -61,3 +61,24 @@ test("does not repeat a completed pull or central-history submission", async () 
   assert.equal(ctx.calls.history, 1);
   assert.equal(ctx.calls.email, 0);
 });
+
+test("retries a failed history write without generating a second roll", async () => {
+  const ctx = setup({ number: 999, earnedEp: 12345, totalEp: 50000, rarity: "rare", badges: [] });
+  let shouldFail = true;
+  ctx.dependencies.recordRoll = async () => {
+    ctx.calls.history++;
+    if (shouldFail) throw new Error("temporary history outage");
+  };
+  await advanceWorkflow(ctx.config, ctx.state, "2026-11-14", ctx.dependencies);
+  await advanceWorkflow(ctx.config, ctx.state, "2026-11-14", ctx.dependencies);
+  assert.equal(ctx.calls.pulls, 1);
+  assert.equal(ctx.calls.history, 1);
+  assert.equal(ctx.state.days["2026-11-14"].status, "history_pending");
+  shouldFail = false;
+  await advanceWorkflow(ctx.config, ctx.state, "2026-11-14", ctx.dependencies);
+  await advanceWorkflow(ctx.config, ctx.state, "2026-11-14", ctx.dependencies);
+  assert.equal(ctx.calls.pulls, 1);
+  assert.equal(ctx.calls.history, 2);
+  assert.ok(ctx.state.days["2026-11-14"].historyRecordedAt);
+  assert.equal(ctx.state.days["2026-11-14"].status, "success");
+});
