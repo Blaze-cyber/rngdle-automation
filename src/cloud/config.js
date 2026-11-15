@@ -7,7 +7,7 @@ const ENV_FIELDS = [
   ["RNGDLE_EMAIL", ["rngdle", "email"], true],
   ["PULL_HISTORY_URL", ["history", "url"]],
   ["PULL_HISTORY_BOT_ID", ["history", "botId"]],
-  ["PULL_HISTORY_TOKEN", null, true],
+  ["PULL_HISTORY_TOKEN", ["history", "token"], true],
   ["CONTROL_SESSION_DAYS", ["control", "sessionDays"]],
   ["SMTP_HOST", ["smtp", "host"]],
   ["SMTP_PORT", ["smtp", "port"]],
