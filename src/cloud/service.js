@@ -123,7 +123,9 @@ export class AutomationService {
               const token = this.env.PULL_HISTORY_TOKEN?.trim();
               const botId = this.env.PULL_HISTORY_BOT_ID?.trim();
               if (!token || !botId) throw new Error("Pull history requires PULL_HISTORY_TOKEN and PULL_HISTORY_BOT_ID");
-              const response = await fetch(new URL("/v1/pulls", endpoint), {
+              const historyUrl = new URL(endpoint);
+              if (historyUrl.protocol !== "https:" || historyUrl.username || historyUrl.password) throw new Error("PULL_HISTORY_URL must be a trusted HTTPS URL");
+              const response = await fetch(new URL("/v1/pulls", historyUrl), {
                 method: "POST",
                 headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
                 body: JSON.stringify({ botId, gameDate, rollNumber: result.number, earnedEp: result.earnedEp,
