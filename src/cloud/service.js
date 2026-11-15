@@ -115,7 +115,25 @@ export class AutomationService {
         if (isWorkflowDue({ now, dayState: state.days[date] })) {
           // Arm recovery before I/O; an eviction must never erase the next wake.
           await this.storage.setAlarm(Date.now() + 10 * 60000);
-          await advanceWorkflow(config, state, date, this.dependencies);
+          await advanceWorkflow(config, state, date, {
+            ...this.dependencies,
+            recordRoll: this.dependencies.recordRoll ?? (async (_config, gameDate, result, rolledAt) => {
+              const endpoint = this.env.PULL_HISTORY_URL?.trim();
+              if (!endpoint) return;
+              const token = this.env.PULL_HISTORY_TOKEN?.trim();
+              const botId = this.env.PULL_HISTORY_BOT_ID?.trim();
+              if (!token || !botId) throw new Error("Pull history requires PULL_HISTORY_TOKEN and PULL_HISTORY_BOT_ID");
+              const historyUrl = new URL(endpoint);
+              if (historyUrl.protocol !== "https:" || historyUrl.username || historyUrl.password) throw new Error("PULL_HISTORY_URL must be a trusted HTTPS URL");
+              const response = await fetch(new URL("/v1/pulls", historyUrl), {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ botId, gameDate, rollNumber: result.number, earnedEp: result.earnedEp,
+                  totalEp: result.totalEp ?? null, rarity: result.rarity ?? "unknown", badges: result.badges ?? [], rolledAt: rolledAt ?? null })
+              });
+              if (!response.ok) throw new Error(`Central pull history returned HTTP ${response.status}`);
+            })
+          });
           if (state.days[date]?.status === "auth_required") {
             meta.authenticated = false;
             await this.storage.put("meta", meta);
